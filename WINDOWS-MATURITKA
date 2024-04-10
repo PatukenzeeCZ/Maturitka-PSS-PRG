@@ -1,1 +1,34 @@
 WINDOWS-MATURITKA
+//heslo Heslo.123
+Důležité opět, ISO dávat až po založení + povolit 3D akceleraci + Sítě Vnitřní síť, NAT, síť s hostem zapnout-> desktop verzi nainstalovat a zapamatovat si heslo pro Administrátora
+Přídavky pro hosta přidat a nainstalovat v pruzkumniku -> restart
+//Nastav statickou IP na zařízení, které není NAT  = KONFIGURACE SÍTĚ
+VMBOX  nastavení -> SÍŤ -> pokročílé //NAT MAC Adressu zjistit
+Windows Settings -> network a internet -> Ethernet -> Change adapter option -> pravy a Status -> Details -> Psychical adress musí být stejná jako NAT MAC adressa -> přejmenovat na NAT a hlavní síť na Internet 
+Pak dát u Internet Properties -> Internet Protocol Version 4 -> Properties -> Use TF IP A -> 192.168.0.254 //poslední PC v síti proto 254, 255 je broadcast!!! -> tuk do Subnet mask - automaticky doplni -> Default gateway 192.168.0.1 - první PC -> Preferred DNS server - stejný jako IP adress - 192.168.0.254 -> Alternate DNS server 8.8.8.8 -> ok -> close
+
+//1. CONFIGURE THIS LOCAL SERVER
+Computer name -> Change -> "JmenoPC" -> ok -> restart
+Remote dekstop -> tuknout na Disable a pak dole "allow remote connection to this computer" -> ok -> refresh
+
+//2. ADD ROLES AND FEATURES
+Server Roles -> vybrat "Active directory domains services" + "DHCP server" + "DNS Server" + "Web Server" -> next až do Confirm installation selections -> nahoře "Restart the destination server automatically if reqired" -> install -> po instalaci close
+//2.1. AD DS
+  Nahoře VLAJKA -> první "Promote this server to a domain controller" -> Add a new forest -> "nazev" //test.local// -> next -> zadat heslo -> next až po install a pak nainstalovat -> restart //PC funguje nyní v doméně
+ Nahoře VLAJKA -> "Complete DHCP...." -> COMIT -> close
+//2.2 DNS
+ Tools -> DNS -> pravým na "jmenoPC" -> ALL TASK, musi byt uzamceno START
+	rozkliknout "jmenoPC" -> Forward Lookup Zones "jmeno.local" -> vidíme že nám to běží a delegace proběhla	
+	Chceme-li přidat další delagaci můžeme skrz prave tlacitko -> "NEW HOST" -> //name treba www, IP -192.168.0.254
+									"New.. CNAME"->A.N. web, Fully www.test.local
+//3.DHCP
+ Tools -> DHCP -> Ipv4 -> pravym a New Scope -> "myNet" -> Star/End 192.168.0.10/250-> Add Exclusions and Delay - vyloučený IP -> například 192.168.0.100 az 192.168.0.200 ADD a next -> 0d 0h 10min -> Router Default Gateway 192.168.0.1 ADD-> Domain Name and DNS Server... IP adress 192.168.0.254, 8.8.8.8 =dnska ->next and finish -> New Reseravtion - vyplnit vsechno IP 192.168.0.9 třeba a MAC adressa aabbcceef00
+//4. Active Directory Users and Computers = 2 rozhraní !!!
+	kliknout na "vasNazev" v mem pripade "test.local" -> new oragisation unit -> vyplnit name "studenti" pak lze přidat další "ucitele" = máme organizační jednotky, tukneme do studenti nebo ucitele a vpravo v prazdnu tukneme pravym a vytvorime New - Group ->"studenti" -> New User -> vyplnit a next vyplnit password 
+Dále vytvoříme na C: složky Home a Profiles a nasdílíme Advanced Sharing -> Permissions a dole allow full control, pak zpět do ADU and computers dvojklik na Jan Novak - profile a vyplnit Profile path: "\\rambo\\Profiles\\novak 
+Dalšího uživatele přidáme uplně stejně akorát do "ucitele" a pak pravy a "Add to group" a dole zapsat "ucitele" ok a pak znovu "domain" //vybereme Admins a pak další unit "services" s userem "www" 
+//5.Internet information Services
+Sites - add website - udělat si novej file "webs" a do toho jeste "www" a dát ho do Physical path -> složka - www Properties a Security - edit - add a dole napíšeme uživatele "www" a v té složce si založíme index.txt následně přejmenujeme na index.html a vložíme <h1> Ahoj </h1>........ Dáme v Add Webiste "connect as.." vyplnime \test\www a heslo - site name "www" host name "www" - MŮŽEME DÁT www.test.local a zobrazí se nám stránka
+//CERTIFIKACE webu  
+  kLIKNEME NA rambo test\administator vpravo a Server certificate - create certificate request a pak create self signed certificate "www.test.local! a web hosting pak vyberem web "www" a dáme si Bindings..add - https a dole zvolime certificat a host name www.test.local
+kdybych chtel presmerovat automaticky HTTP HTTPS tak vpravo je HSTS a dáme redirect
