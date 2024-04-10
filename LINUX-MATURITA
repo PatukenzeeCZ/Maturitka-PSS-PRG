@@ -1,1 +1,181 @@
 LINUX-MATURITKA
+NEVYBÍRAT V NABÍZENÉM NASTAVENÍ ISO SOUBOR!!! až po založení v uloziste Řadič IDE, vpravo kolečko a vybrat
+Při instalaci nejméně 20GB, povolit všechny čtyři  síťové karty, NAT-VNITŘNÍ SÍŤ - SÍŤ POUZE S HOSTEM
+Instalace -> minimální instalace POUZE!!!
+po instalaci přidat přídavky pro hosta
+přídavky pro hosta -> spustit jako program autorun.sh -> restart
+
+
+Přidání nového uživatele přes terminál: 
+	useradd -D    = základní nstavení, které dostane nový uživatel
+	
+
+	//vytovreni noveho uzivatele Admina, vytvorit slozku admin/data 
+	sudo useradd -d /admin/data -s /bin/bash admin     / -d je slozka -s je shell
+	sudo mkdir -p /admin/data
+	sudo nano /etc/passwd   ->> admin:x:1001:1001: Linux Administrator: /admin/data:/bin/bash
+
+	//nakopirovani Etc skellu do admin/data slozky	
+	sudo cp /etc/skel/*.* /admin/data/
+
+	//z daty v tétom adresáři může pracovat jenom admin
+	ll /
+	ll /admin
+	cd ..   //jsme v /admin$
+	sudo chown admin data
+	sudo chmod 700 data
+	sudo nano /etc/group -> přidat za sudo:x:27:jmeno,admin //  ,admin
+					a také	adm:x:4:sylog,jmeno,admin
+	//změnit heslo pro admin
+	sudo passwd admin
+
+	//vytvoreni noveho uzivatele Alana 
+	sudo adduser alan   --> vyplnit
+	//patri do skupiny Delon
+	sudo groupadd delon
+	sudo nano /etc/group --> delon:x:1003:alan //alan napsat
+	// s těmito daty může pracovat jen uživatel Alan, všechny skupiny můžou číst v domovskem adresari cd /home
+	sudo chgrp delon alan
+	sudo chmod 740 alan
+
+
+	//vytvor soubor a do nej napis prikazy
+	nano test.sh
+	--> překopírování složky z domovského adresáře dokumenty do tmp
+	cp -R ~/Dokumenty /tmp                                //vlnovka alt +a 
+	--> ukončete process s pidem pid nebo s pidem 15,6,5,8
+	kill -kill 15658
+		nebo	
+	kill -9 15658
+	--> vytvoř složku Script v domovském adresáři
+	mkdir ~/Script
+	--> vytvořte v domovském adrsáři soubor ssh a nastavte na nej opravneni na spusteni pro vlastnika a skupni
+	touch test.sh
+	chmod ug+x test.sh
+	--> změnte uživatele souboru test.sh na alan
+	chown alan test.sh
+	--> vypsat vsechny processy
+	ps -a 
+
+	//Pomocí programu cron nastavte spusteni programu test.sh kazde pondeli v jednu hodinu
+	sudo crontab -e //1
+	0 1 * * * ~/test.sh		//minuty, hodiny, dom den v mesici //mon - mesic// dow den v tydnu
+
+
+	//instaluj programya připrav - inscape , JAVA aplikacích
+	sudo apt updata
+	sudo apt install inkscape
+	sudo snap install --classic intellij-idea-community
+	--> instalace .deb
+	stáhnout ze stránek napriklad bellsoft jdk libertiu .deb
+	cd Stažené/
+	sudo dpkg -i název
+
+	//Instalace DHCP a DNS
+	sudo apt install isc-dhcp-server
+	sudo apt install bind9
+	//konfigurujte pridelovani IP adress vlastniho subnetu Ip Adress pro privatni site v rozsahu 50 zarizeni
+	// pracujeme v adresari Stazene
+	sudo nano /etc/dhcp/dhcpd.conf
+	odkomentujeme si řádky subnet, range, option router, což znamená že odeberem #
+	smažeme option router, cely radek
+	subnet 192.168.66.0 netmask 255.255.255.192  //posledni cislo 192 dostanee tim ze 2 na 6 = 64 - 2 = 62 > 50zarizeni, vejde se = 11000000 bin -> dec 192   
+	range 192.168.66.1 192.168.66.50;} //50 zarizeni
+	//rezervace na fyzickeho hosta Maturant 
+	host maturant{
+		hardware ethernet 70:85:E3:2A:FE:05; //vyhrazena adressa pro maturant
+	} 
+	ULOŽÍME A ZAVŘEME!!!
+	ip a -> zjistime 3: enp0s8: //vnitrni sit -> zkopirujeme a vložíme do  sudo  nano /etc/default/isc-dhcp-server
+	-> INTERFACESv4="enp0s8" -> uložit 
+	sudo ip a a 192.168.66.60/26 dev enp0s8 //nastaven enp0s8
+	sudo service isc-dhcp-server start
+	sudo service isc-dhcp-server status //MUSI BEZET
+	//DNS
+	sudo service bind9 status //aktivni?
+	//vytvor autoritativni DNS, ktere bude zpracovat vlastni zonu s nazvem udelatko.net
+	cd /etc/bind/
+	sudo nano named.conf.udelatko.net -> 	
+						zone "udelatko.net" {
+							type master;
+							file "/etc/bind/udelatko.net";						
+								};
+	-> uložit -> sudo nano named.conf -> přidat
+		 include "/etc/bind/named.conf.udelatko.net";
+	-> uložit
+	sudo cp db.local udelatko.net
+	sudo nano udelatko.net
+	;
+	;	BIND data file for udelatko.net (
+	;
+	$	TTL 5h
+	@ 	IN SOA udelatko.net. admin.udelatko.net.
+			2024040601 :Serial // rok mesic den randomcislo
+			3h	 :Refresh
+			30m      :Retry
+			10h	 :Expire
+			5h   )    : Negative Cache TTL  
+;
+@		IN NS udelatko.net.
+@		IN A 192.168.66.60
+		IN MX 10 mail.udelatko.net
+	mail	IN A 192.168.66.59
+	www 	IN A 192.168.66.58
+	web	IN CNAME www.udelatko.net
+ // altgr v je @
+	-> ULOŽIT
+	sudo service bind9 restart 
+	sudo service bind9 status //musi bezet
+	ping www.udelatko.net
+	sudo nano /etc/resolv.conf
+	nameserver 127.0.0.1
+	-> ULOŽIT
+	ping www.udelatko.net
+	//zobrazit jejich stav
+	service isc-dhcp-server status
+	service bind9 status
+
+
+	//NAINSTALOVAT LAMP SERVER, konfigurovat apache aby sel na dresse mujweb
+	sudo apt install tasksel
+	sudo tasksel -> vybrat lamp server -> "OK" - tab?
+	---------------
+	sudo apt update
+	sudo apt install apache2
+	sudo apt install mysql-server
+	sudo apt install php libapache2-mod-php php-mysql
+	sudo systemctl restart apache2
+
+	cd ..   // /etc$
+	cd apache2
+	cd sites-available/
+	sudo cp 000-default.conf udelatko.net.conf
+	sudo nano udelatko.net.conf
+		<VirtualHost *:80>
+			ServerName www.udelatko.net
+			ServerAdmin webmaster@localhost
+			DocumentRoot /mujweb
+			ErrorLog  //nechame stejny
+			CustomLog	//nechame stejny
+		</VirtualHost>
+	-> ulož
+	sudo mkdir /mujweb
+	cd /mujweb/
+	sudo nano index.html
+	- "Ahoj" -> ulož
+	sudo a2ensite udelatko.net.conf
+	sudo /etc/init.d/apache2 reload 
+	sudo nano /etc/hosts -> 127.0.0.1 ww.udelatko.net -> ulož
+	ping www.udelatko.net // + bude fungovat ve firefoxu po přidělání oprávnění
+	cd /etc/apache2/conf-available/
+	sudo nano udelatko.conf
+		<Directory /mujweb>	
+			DirectoryIndex index.html
+			Require all granted
+			Allow from All
+		</Directory>
+	sudo a2enconf udelatko.conf
+	sudo /etc/init.d/apache2 reload  //restart
+	NYNÍ FUNGUJE udelatko.net a vypisuje "Ahoj"
+
+HOTOVO MATURITA JE V KAPSE!!!
