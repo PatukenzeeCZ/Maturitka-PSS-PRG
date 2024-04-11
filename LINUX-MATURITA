@@ -85,6 +85,9 @@ Přidání nového uživatele přes terminál:
 	host maturant{
 		hardware ethernet 70:85:E3:2A:FE:05; //vyhrazena adressa pro maturant
 	} 
+
+	CHYBY: journalctl -u isc-dhcp-server.service -n 50
+
 	ULOŽÍME A ZAVŘEME!!!
 	ip a -> zjistime 3: enp0s8: //vnitrni sit -> zkopirujeme a vložíme do  sudo  nano /etc/default/isc-dhcp-server
 	-> INTERFACESv4="enp0s8" -> uložit 
