@@ -1,0 +1,15 @@
+1. Hello world!
+2. tlačítko s počítadlem stlačení
+3. imitace hrací kostky na tlačítko 1-6 číslem
+4. Žárovka
+5. kostka na tlacitko
+6. kostka bez tlacitka
+7. novySedmy je rotace s objektem, maturitaSedmy je Morseovka
+8. Povrch/objem valce 
+9. pres tabnite povrchy a objemy teles
+10. BMI
+11 . Webovy prohlizec
+13. BIN-DEC prelozeni
+14. KALKULAČKA
+15. Socialka pocitani
+16. ukladani do fileStream nebo Databaze = sql - DIÁŘ
